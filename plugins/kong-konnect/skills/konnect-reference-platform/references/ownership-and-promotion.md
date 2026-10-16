@@ -23,20 +23,23 @@ can be proven. Do not represent least privilege through a custom registry.
 
 1. A service team changes the next-beta OpenAPI contract at the repository
    root. It never edits a retained stable contract.
-2. The service pipeline generates development decK from that contract, adds
-   the repository-owned plugins and tags, validates the file, and commits the
-   exact result.
-3. The service pipeline applies its development Catalog manifest with
-   `kongctl`.
-4. The service pipeline applies only its tagged development Gateway slice to
-   the team development control plane.
-5. The pipeline proves Catalog, publication, implementation linkage, routing,
+2. Credential-free CI generates development and production decK from the
+   selected contracts, adds repository-owned plugins and tags, validates both
+   files, and uploads only those files.
+3. A separate trusted workflow verifies the artifact belongs to the current
+   same-repository PR head, validates its boundaries, and commits the exact
+   result. It never executes PR-controlled code with the write credential.
+4. A second validation run requires generation to produce a clean diff.
+5. After merge, the service pipeline proves the committed files have no drift
+   and synchronizes its development Catalog and tagged Gateway slice with
+   `kongctl sync`.
+6. The pipeline proves Catalog, publication, implementation linkage, routing,
    and authorization for the changed slice.
 
 When several repositories share a team control plane, each repository must use
-unique ownership tags and a narrow apply surface. Accepting conflict risk is an
-explicit reference-example simplification, not a claim that tags enforce
-isolation.
+unique select tags and a narrow synchronization surface. Accepting conflict
+risk is an explicit reference-example simplification, not a claim that tags
+enforce isolation.
 
 ## Production Promotion Flow
 
@@ -53,9 +56,9 @@ isolation.
    checksum, and relevant tool versions.
 5. Platform review applies governance checks without regenerating or silently
    editing the artifact.
-6. The platform pipeline applies the combined production Gateway state to the
-   single production control plane.
-7. Service-owned production Catalog resources are applied from the exact
+6. The platform pipeline synchronizes the combined production Gateway state to
+   the single production control plane.
+7. Service-owned production Catalog resources are synchronized from the exact
    service commit referenced by the promotion.
 
 If platform reviewers require a Gateway change, make it in the service
@@ -73,6 +76,7 @@ source of truth, but it must retain traceability to the service-authored source.
 - service-owned production files do not declare global plugins
 - production deployment requires the platform environment and review rules
 - promotion checks the copied file checksum against the recorded provenance
-- apply targets are explicit; destructive sync and delete paths are not implied
+- stage namespaces and decK select tags constrain create, update, and delete
+  reconciliation to the intended owner
 - unresolved `!lookup` or `_external` behavior is reported as a `kongctl`
   compatibility dependency rather than replaced with hard-coded UUIDs

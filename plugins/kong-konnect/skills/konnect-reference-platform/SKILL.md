@@ -62,8 +62,9 @@ Require these properties unless the user deliberately chooses another model:
 - one default branch with distinct development and production resources
 - a root beta OpenAPI contract plus immutable, stable versioned files
 - an explicit current-production version in the production Catalog manifest
-- generated decK files committed so reviewers can inspect exact Gateway state
-- apply-only reconciliation until deletion semantics are intentionally designed
+- credential-free CI generation followed by a trusted, same-repository
+  materializer that commits decK files for review
+- ownership-scoped `kongctl sync` using stage namespaces and decK select tags
 
 ### 2. Draw the ownership boundary
 
@@ -127,6 +128,8 @@ configuration to `deck-gateway`.
 Validate more than YAML syntax:
 
 - regenerate committed decK from the OpenAPI source and require a clean diff
+- verify the materializer writes only validated Gateway files from the current
+  same-repository PR head and produces no commit when generated state matches
 - verify release automation opens a reviewed service PR, advances the root
   beta, and derives production generation from the manifest's stable selector
 - reject modification or deletion of stable release files already on the
@@ -175,9 +178,10 @@ Before answering, verify that you can state:
 
 ## Handoffs
 
-- Use `kongctl-declarative` to author and validate Konnect YAML and CI apply
+- Use `kongctl-declarative` to author and validate Konnect YAML and CI sync
   workflows.
-- Use `deck-gateway` to generate, tag, validate, diff, or apply Gateway state.
+- Use `deck-gateway` to generate, tag, validate, diff, or synchronize Gateway
+  state.
 - Use `konnect-api-catalog`, `konnect-api-publish`, or `konnect-app-auth` when
   one product link needs focused diagnosis.
 - Use `konnect-access-scope` when the remaining question is the least-privilege
